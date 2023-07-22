@@ -1,0 +1,42 @@
+[
+    {
+        "questions": "1",
+        "options": [
+            {
+                "type":"a",
+                "img":"wedding1.png"
+            },
+            {
+                "type":"b",
+                "img":"wedding2.png"
+            }
+        ]
+        },
+    {
+            "questions": "2",
+            "options": [
+                {
+                    "type":"a",
+                    "img":"wedding3.png"
+                },
+                {
+                    "type":"b",
+                    "img":"wedding4.png"
+                }
+            ]
+    },
+
+    {
+        "questions": "3",
+        "options": [
+            {
+                "type":"a",
+                "img":"wedding5.png"
+            },
+            {
+                "type":"b",
+                "img":"wedding6.png"
+            }
+        ]
+    }
+]
