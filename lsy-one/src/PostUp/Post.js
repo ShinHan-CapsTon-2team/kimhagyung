@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-// import logo from '../images/imagelogo.png';
+import logo from '../Images/imagelogo.png';
 
 import upload from '../Images/upload.png';
 import f_file from '../Images/f-file.png';
 import c_upload from '../Images/com_upload.png';
 import set_Cate from '../Images/sel-Cate.png';
-import hol from '../Images/place.png';
+// import hol from '../Images/place.png';
 import './Post.css';
 
 const SERVER_URL= 'http://localhost:4000/api/post';
@@ -39,6 +39,7 @@ function Post() {
 };
 
   const handleSubmit = () => {
+    window.location.href = '/home';
     // 사용자가 게시글을 업로드한 시점의 시간
     const currentTime = new Date().toISOString();
     // 서버로 보낼 데이터 객체를 생성
@@ -61,7 +62,7 @@ function Post() {
     fetch(SERVER_URL, {
       method: 'POST',
       // headers: {
-      //   'Content-Type': 'application/json', // UTF-8 설정 추가
+      //   'Content-Type': 'application/json', 
       // },
       body: formData,
     })
@@ -107,6 +108,10 @@ function Post() {
     setCategory(selectedCategory);
   };
 
+  /*로고클릭->홈페이지*/
+  const handleLogoClick = () => {
+    window.location.href = '/home';
+  };
 
   /*파일업로드*/
   const handleImageFileChange = (e) => {
@@ -139,10 +144,14 @@ function Post() {
 
 
   return (
+
+    
     <div className="container">
       {/* 업로드박스 */}
       <div className="box1" />
 
+      <img className="logo" src={logo} alt="logo" onClick={handleLogoClick}/>
+      
       <input
         type="text"
         className="name"
@@ -173,7 +182,6 @@ function Post() {
         placeholder="제목"
       />
 
-      {/* <img className="logo" src={logo} alt="logo" /> */}
       <img className="upload-img" src={upload} alt="upload" />
 
       <img

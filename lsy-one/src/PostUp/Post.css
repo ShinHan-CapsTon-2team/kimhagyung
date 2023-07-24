@@ -53,25 +53,25 @@
         padding: 5px;
         z-index: 2; /* 이미지 앞에 글자 위치함*/
         color : white;
-        font-size: 16px;
+        font-size: 20px;
       }  
 
       .category-text{
         position: absolute;
-        top: 89%;
+        top: 89.5%;
         left: 20%;
         transform: translateX(-50%);
         padding: 5px;
         z-index: 2; /* 이미지 앞에 글자 위치함 */
         color : white;
-        font-size: 16px;
+        font-size: 20px;
       }
 
       /* 드롭다운 메뉴 스타일 */
       .dropdown-menu-container {
         position: absolute;
         z-index: 3; /* 이미지 앞에 글자 위치함 */
-        top : 60%;
+        top : 62%;
         left:1%;
       }
 
@@ -80,8 +80,8 @@
         position: absolute;
         background-color: #798BE6;
         border: 1px solid #ccc;
-        padding-left: 189px;
-        padding-right: 189px;
+        padding-left: 249px;
+        padding-right: 249px;
         padding-top:10px;
         padding-bottom:10px;
         min-width: 120px;
@@ -89,13 +89,21 @@
         color:white;
         border-radius: 18px;
         border:none;
+        font-size: 20px;
       }
 
       .dropdown-menu div {
-
         cursor: pointer;
         padding: 5px;
         z-index: 2; /* 이미지 앞에 글자 위치함 */
+      }
+
+      .set-cate {
+        width: 40.26%;
+        height: 6.57%;
+        left: 1.04%;
+        top: 88.87%;
+        position: absolute;
       }
 
        .name { /*이름박스*/
@@ -125,7 +133,7 @@
          font-size: 20px;
        }
        
-       
+       /*설명*/
        .description {
          width: 59.9%;
          height: 7.93%;
@@ -170,13 +178,7 @@
        
  
        
-       .set-cate {
-         width: 40.26%;
-         height: 5.57%;
-         left: 1.04%;
-         top: 88.87%;
-         position: absolute;
-       }
+      
        
        .c-upload {
          width: 18.15%;
@@ -186,11 +188,11 @@
          position: absolute;
        }
        
-       .placeholder {
+       /* .placeholder {
          width: 3.81%;
          height: 5.11%;
          left: 34.88%;
          top: 88.87%;
          position: absolute;
-       }
+       } */
        
