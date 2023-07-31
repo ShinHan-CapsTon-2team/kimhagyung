@@ -18,7 +18,7 @@ function Routing() {
           <Routes>
             <Route path='/' element={<Landing />}/>
 
-            <Route path ='/photoup' element={<Post />}/>
+            <Route path ='/post' element={<Post />}/>
             
             <Route path ='/quizindex' element={<QuizSelIndex />}/>
             <Route path ='/quiztest' element={<QuizSelPhoto />}/>

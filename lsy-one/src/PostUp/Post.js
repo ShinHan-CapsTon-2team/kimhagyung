@@ -39,9 +39,9 @@ function Post() {
 };
 
   const handleSubmit = () => {
-    window.location.href = '/home';
+    //window.location.href = '/home';
     // 사용자가 게시글을 업로드한 시점의 시간
-    const currentTime = new Date().toISOString();
+    //const currentTime = new Date().toISOString();
     // 서버로 보낼 데이터 객체를 생성
     const data = {
       title,
@@ -50,7 +50,7 @@ function Post() {
       category,
       name,
       profile,
-      upload_time: getCurrentTime(),
+      //created_at : getCurrentTime(),
     };
 
 // 이미지 파일을 FormData로 감싸서 서버로 전송

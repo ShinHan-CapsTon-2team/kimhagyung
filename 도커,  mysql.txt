@@ -1,0 +1,196 @@
+docker run -d --name some-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password mysql --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+//도커 컨데이서 생성시 한글깨짐방지?
+
+
+-- 데이터베이스 생성시 문자셋 및 정렬 방식 지정
+CREATE DATABASE DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- posts 테이블의 컬럼들도 utf8mb4와 utf8mb4_unicode_ci로 설정
+ALTER TABLE your_post
+  MODIFY title VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY image_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY category VARCHAR(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY profile VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+
+
+CREATE TABLE your_post (
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  description TEXT,
+  category VARCHAR(255),
+  created_at DATETIME,
+  image_url VARCHAR(255),
+  name CHAR(40),
+  profile CHAR(40),
+  INDEX idx_name (name),
+  INDEX idx_profile (profile)
+);
+
+
+
+show variables like 'c%'; 
+----- character_set_client를 utf8로 변경
+mysql> SET character_set_client = utf8;
+------ character_set_connection을 utf8로 변경
+mysql> SET character_set_connection = utf8;
+
+SHOW VARIABLES LIKE 'character_set_database'; 
+이 utf-8인지 확인한다 아니라면 
+SET character_set_database = utf8; 이걸로 변경 
+FLUSH PRIVILEGES; //적용
+
+
+
+-----------컨테이너 접속----------
+winpty docker exec -it capstone bash
+systemctl restart mariadb
+
+mysql -h 192.168.65.254 -u ha -p //접속 
+비번 kimhg
+
+mysql -h 192.168.65.254 -u root -p //호스트로 접속 
+
+mysql -u root -p //루트사용자로 접속 
+비번:1 
+
+
+---- mysql -h 192.168.65.254 -u root -p----- 아래 코드들은 이곳가서 권한부여해줌 ----- 비번:1
+CREATE USER 'ha'@'%' IDENTIFIED WITH mysql_native_password BY 'kimhg';
+GRANT ALL PRIVILEGES ON *.* TO 'ha'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+
+
+ALTER USER 'ha'@'192.168.65.254' IDENTIFIED WITH mysql_native_password BY 'rlagkrud';
+//비번 변경 
+
+GRANT ALL PRIVILEGES ON *.* TO 'ha'@'192.168.65.254' WITH GRANT OPTION;
+//변경 후 접속 권한 부여 
+
+GRANT ALL PRIVILEGES ON *.* TO 'ha'@'172.17.0.1' WITH GRANT OPTION;
+//도커에서 어쩌구 때문에 호스트 이걸로 인식? 뭐그래서 이것도 허용 
+
+GRANT ALL PRIVILEGES ON *.* TO 'ha'@'%' IDENTIFIED BY 'kimhg';
+FLUSH PRIVILEGES; //적용 
+
+//아래는 나에게 접근하는 모든 호스트 허용 
+
+
+
+CREATE USER 'ha'@'192.168.65.254' IDENTIFIED WITH mysql_native_password BY 'kimhg'; 
+//새로운 생성자 생성 
+GRANT CREATE ON *.* TO 'ha'@'192.168.65.254'; //create권
+GRANT SELECT, INSERT, UPDATE, DELETE ON DB.posts TO 'ha'@'192.168.65.254'; //crud권한
+FLUSH PRIVILEGES;//변경사항 적용 
+
+
+
+DROP USER 'ha'@'localhost';
+
+
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' pratice-mysql-container
+//mysql주소 알기 
+=> 172.17.0.2 이거임 
+내 주소는 cmd에 ipconfig해서 보고 ping 보냈을 때 가면 그걸로 ! 
+
+
+
+------한글 인코딩-------
+ALTER TABLE posts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+//디비 테이블 인코딩 ! 
+
+CREATE TABLE your_table_name (
+  -- 컬럼 정의
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+// 아니면 테이블 생성할 때 이렇게 해줘도됨 
+
+
+ALTER DATABASE posts DEFAULT CHARACTER SET UTF8;
+
+ALTER TABLE DB MODIFY your_column_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+-----------도커 컨테이너 생성-------------------
+docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=<password> -d -p 3306:3306 mysql:latest
+
+
+# MySQL Docker 컨테이너 중지
+$ docker stop mysql-container
+
+# MySQL Docker 컨테이너 시작
+$ docker start mysql-container
+
+# MySQL Docker 컨테이너 재시작
+$ docker restart capstone
+
+
+
+--인코딩권한-------
+
+
+-- 데이터베이스 생성시 문자셋 및 정렬 방식 지정
+CREATE DATABASE DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- posts 테이블의 컬럼들도 utf8mb4와 utf8mb4_unicode_ci로 설정
+ALTER TABLE posts
+  MODIFY title VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY image_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY category VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY profile VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY upload_time TIMESTAMP;
+
+
+============================================================
+======한글인코딩을 위한 mariadb접근 =========
+1) 실행중이 도커 확인 
+docker ps
+=> 여기서 도커 아이디 확인 (3dea596267b2) 
+2) winpty docker exec -it 3dea596267b2 sh
+=> 쉘로 접근 후 
+cd /etc/mysql
+ls
+또는 
+cd /etc
+ls | grep my.cnf
+에서 my.cnf 파일 접근 
+
+만약 my.cnf파일이 없다면 
+1) cd /etc/ 
+2) vi my.cnf
+3) i
+4) [mysqlId]에 # UTF-8 설정 추가
+default-character-set=utf8mb4
+collation-server=utf8mb4_unicode_ci
+//오류나면 추가안해도됨 
+
+[mysql]
+default-character-set=utf8mb4
+
+[client]
+default-character-set=utf8mb4
+
+[mysqldump]
+defult-character-set=utf8mb4
+이 두가지 추가 
+5) esc 
+6) :wq + enter //저장후 나감 
+7) 재시작 
+=> systemctl restart mariadb
+
+
+
+
+
+
+
+
+
+
+
+
+
+
