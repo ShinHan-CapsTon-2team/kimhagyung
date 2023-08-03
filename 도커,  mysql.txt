@@ -185,7 +185,21 @@ defult-character-set=utf8mb4
 
 
 
+<설치>
+npm install @tensorflow/tfjs
+pip install tensorflowjs
 
+<numpy버전 다운>
+pip install numpy==1.19.5
+tensorflowjs_converter --input_format keras ./model--0005-0.3897.hdf5 ./destination_folder1
+
+
+파이썬을 사용해서 이미지 분류 모델인  CNN모델을 만들었는데 이 hfd5모델파일을 리액트인 js코드로(아래클라이언트코드) 구현된 웹사이트에 적용하고싶은데 어떻게 코드를 짜야될까? 카테고리는 총 5개로 분류되어있고 아래 isMenuOpen의 가족사진, 웨딩사진, 반려동물, 바디프로필, 증명사진 이 부분이 분류된 5개인데 모델파일을 어떻게 적용해서 분류해야될까?? 아 참고로 동작방식은 사용자가 이미지 파일을 업로드했을 때 previewImage에 미리보기 이미지가 보임과 동시에 카테고리 메뉴가 자동으로 그 이미지가 뭔지  카테고리를 자동으로 분류되도록 코드를 짜고싶어 
+
+tensorflowjs_converter --input_format keras ./model--0005-0.3897.hdf5 ./destination_folder
+ tensorflowjs_converter --input_format=keras /tmp/model.h5 /tmp/tfjs_model
+
+model--0005-0.3897.hdf5
 
 
 
