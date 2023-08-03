@@ -1,0 +1,19 @@
+//기존 Keras 모델을 TF.js Layer 형식으로 변환하기
+tensorflowjs_converter --input_format keras \ /lsy-one/lsy-one/src/model/model.h5 \ /lsy-one/lsy-one/src/model/tfjs_target_dir
+npx tensorflowjs_converter --input_format keras c/lsy-one/lsy-one/src/model/model.h5 c/lsy-one/lsy-one/src/model/tfjs_target_dir
+
+그 전에 npm install -g @tensorflow/tfjs-converter 이거 설치 했는데 만약 안된다면 
+npm install -g @tensorflow/tfjs-converter 이걸 사용해서 글로벌로 설치되어있는지 확인(경로)
+
+그래도 안된다면 
+
+
+npm show @tensorflow/tfjs versions
+
+
+
+pip install tensorflowjs 사용 만약 설치가 지연된다면 설치되어있는 텐서플로우를 제거하던가 
+pip uninstall tensorflow
+pip uninstall tensorflow-intel
+
+pip install --upgrade pip 을 업그래이드 해준다. 
