@@ -17,3 +17,43 @@ pip uninstall tensorflow
 pip uninstall tensorflow-intel
 
 pip install --upgrade pip 을 업그래이드 해준다. 
+
+tensorflowjs_converter --input_format keras \
+                       c/kimhagyung/model.h5 \
+                       c/path/to/tfjs_target_dir
+
+model.hdf5
+
+tensorflowjs_converter --input_format keras \
+                       C:\kimhagyung-main\kimhagyung-main\lsy-one\src\model\model.hfd5 \
+                       C:\kimhagyung-main\tfjs_target_dir\
+
+//numpy 다운그레이드
+pip3 install numpy==1.23.5
+
+pip install protobuf==3.19.0
+
+
+
+
+npm install @tensorflow/tfjs-react-native
+
+
+
+
+# ... (기존의 파이썬 코드)
+
+# Keras 모델을 TensorFlow.js Layers Model 형식으로 저장
+tfjs_layers_model_format = '../model/model_tfjs'
+tfjs.converters.save_keras_model(model, tfjs_layers_model_format)
+
+# 모델의 클래스 이름을 저장합니다
+import json
+class_names_json = json.dumps(class_names)
+with open('../model/class_names.json', 'w') as f:
+    f.write(class_names_json)
+
+
+
+tensorflowjs_converter --input_format=keras /path/to/model.hdf5 /path/to/tfjs_model
+
