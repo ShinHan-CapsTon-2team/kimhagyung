@@ -1,6 +1,6 @@
 import React, { useState, useEffect ,useRef, useCallback } from 'react';
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl'; // 웹 브라우저에서 WebGL 백엔드 사용
+import '@tensorflow/tfjs-backend-webgl'; 
 import logo from '../Images/imagelogo.png';
 import { useNavigate } from 'react-router-dom';
 
