@@ -9,6 +9,8 @@ import QuizReult from './Quiz/Quizresult'
 import Post from './PostUp/Post'
 import Home from './Home/homepage.js'
 import Reco from './PostUp/recommend.js'
+import Lookup from './Lookup/Images_Lookup.js' // 조회
+
 function Routing() {
   return (
       <div className="App">
@@ -25,6 +27,7 @@ function Routing() {
             <Route path ='/quizresult' element={<QuizReult />}/>
 
             <Route path ='/home' element={<Home />}/>
+            <Route path ='/lookup/:id' element={<Lookup/>}/>
 
 
           </Routes>

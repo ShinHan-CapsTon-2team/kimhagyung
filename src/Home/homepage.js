@@ -14,12 +14,22 @@ import body from '../Images/image 9.png';
 import styled from "styled-components";
 
 
+// const categoriesData = [
+//   { name: '가족사진', src: family },
+//   { name: '반려동물', src: pet },
+//   { name: '증명사진', src: profile },
+//   { name: '웨딩사진', src: wedding },
+//   { name: '바디프로필', src: body },
+// ];
+
+
 const categoriesData = [
-  { name: '가족사진', src: family },
+  { name: '바디프로필', src: body },
   { name: '반려동물', src: pet },
+  { name: '가족사진', src: family },
   { name: '증명사진', src: profile },
   { name: '웨딩사진', src: wedding },
-  { name: '바디프로필', src: body },
+
 ];
 
 

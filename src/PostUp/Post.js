@@ -33,7 +33,7 @@ function Post() {
     '반려동물',
     '가족사진',
     '증명사진',
-    '웨딩프로필',
+    '웨딩사진',
   ];
 
   const navigate = useNavigate();
