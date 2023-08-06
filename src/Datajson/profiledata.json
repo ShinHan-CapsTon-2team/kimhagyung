@@ -1,0 +1,42 @@
+[
+    {
+        "questions": "1",
+        "options": [
+            {
+                "type":"a",
+                "img":"profile1.png"
+            },
+            {
+                "type":"b",
+                "img":"profile2.png"
+            }
+        ]
+        },
+    {
+            "questions": "2",
+            "options": [
+                {
+                    "type":"a",
+                    "img":"/profile3.png"
+                },
+                {
+                    "type":"b", 
+                    "img":"profile4.png"
+                }
+            ]
+    },
+
+    {
+        "questions": "3",
+        "options": [
+            {
+                "type":"a",
+                "img":"profile5.png"
+            },
+            {
+                "type":"b",
+                "img":"profile6.png"
+            }
+        ]
+    }
+]

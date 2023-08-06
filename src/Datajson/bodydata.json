@@ -1,0 +1,42 @@
+[
+    {
+        "questions": "1",
+        "options": [
+            {
+                "type":"a",
+                "img":"image34.png"
+            },
+            {
+                "type":"b",
+                "img":"image35.png"
+            }
+        ]
+        },
+    {
+            "questions": "2",
+            "options": [
+                {
+                    "type":"a",
+                    "img":"image36.png"
+                },
+                {
+                    "type":"b",
+                    "img":"image37.png"
+                }
+            ]
+    },
+
+    {
+        "questions": "3",
+        "options": [
+            {
+                "type":"a",
+                "img":"image38.png"
+            },
+            {
+                "type":"b",
+                "img":"image39.png"
+            }
+        ]
+    }
+]
