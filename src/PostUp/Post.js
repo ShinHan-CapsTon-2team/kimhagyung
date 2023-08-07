@@ -78,6 +78,8 @@ function Post() {
       };
     
       // 이미지 파일을 ImageData로 변환
+      //TensorFlow.js 모델에 이미지를 입력으로 제공하기 위해서 이미지 파일을 ImageData로 변환하여 모델에 전달
+      //TensorFlow.js 모델은 숫자 행렬 형태인 ImageData를 입력으로 받아들이기 때문임 
       const getImageData = (file) => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
