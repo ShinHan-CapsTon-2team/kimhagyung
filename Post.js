@@ -1,129 +1,156 @@
 
-//import React, { useState ,useRef, useCallback} from 'react';
-import React, { useState ,useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect ,useRef, useCallback } from 'react';
+import * as tf from '@tensorflow/tfjs'; //npm i @tensorflow/tfjs
+import '@tensorflow/tfjs-backend-webgl'; //npm i @tensorflow/tfjs-backend-webgl
+//useRef, useCallback
 import logo from '../Images/imagelogo.png';
-import * as tf from '@tensorflow/tfjs';
+import { useNavigate } from 'react-router-dom';
+
 import upload from '../Images/upload.png';
 import f_file from '../Images/f-file.png';
 import c_upload from '../Images/com_upload.png';
-//import './cnn-model.js';
-//import hol from '../Images/place.png';
 
+//import Inputtitle from './InTitle' 컴포넌트 
+
+import styled from "styled-components";
 
 const SERVER_URL= 'http://localhost:4000/api/post';
 
 function Post() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [image_url, setImageUrl] = useState('');
-  const [category, setCategory] = useState('');
-  const [name, setName] = useState('');
-  const [profile, setProfile] = useState(''); 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState('');
-  const [imageFile, setImageFile] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null); // 미리보기 이미지 URL 상태
-  const [predictedCategory, setPredictedCategory] = useState(''); // 분류 결과를 저장하는 상태
- // 모델 상태를 저장하는 상태 추가
- const [model, setModel] = useState(null);
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    //const [image_url, setImageUrl] = useState('');
+    const [category, setCategory] = useState('');
+    const [name, setName] = useState('');
+    const [profile, setProfile] = useState(''); 
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('');
+    const [imageFile, setImageFile] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null); // 미리보기 이미지 URL 상태
+    const [prediction, setPrediction] = useState(null);
+    const [selectedClass, setSelectedClass] = useState(0); // 선택한 클래스의 인덱스
+    const classLabels = [
+      '바디프로필',
+      '반려동물',
+      '가족사진',
+      '증명사진',
+      '웨딩사진',
+    ];
+    const navigate = useNavigate();
 
-// 컴포넌트가 마운트된 후에 모델을 로드
-useEffect(() => {
-  // 모델 파일 경로
-  const modelFilePath = '../model/model--0005-0.3897.hdf5';
-
-  // 모델 파일을 로드하는 함수 정의
-  const loadModel = async () => {
-    try {
-      const model = await tf.loadLayersModel(modelFilePath);
-      setModel(model);
-    } catch (error) {
-      console.error('Error while loading the model:', error);
-    }
-  };
-
-  // 모델 로드 함수 호출
-  loadModel();
-}, []);
-
-  const handleSubmit = () => {
-    //window.location.href = '/home';
-    // 사용자가 게시글을 업로드한 시점의 시간
-    //const currentTime = new Date().toISOString();
-    // 서버로 보낼 데이터 객체를 생성
-    const data = {
-      title,
-      description,
-      category,
-      name,
-      profile,
+    //홈페이지
+    const handleGohomeClick = () => {
+        navigate('/home');
     };
 
-// 이미지 파일을 FormData로 감싸서 서버로 전송
-    const formData = new FormData();
-    formData.append('data', JSON.stringify(data));
-    formData.append('image', imageFile);
+    useEffect(() => {
+        // 모델 로드
+        const modelUrl = './model_tfjs/model.json';
+        async function loadModel() {
+          const model = await tf.loadLayersModel(modelUrl);
+          setModel(model);
+        }
+        loadModel();
+      }, []);
     
-// fetch()를 이용하여 서버로 데이터를 전송
-    fetch(SERVER_URL, {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('서버 응답:', data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  };
+      const [model, setModel] = useState(null);
+    
+      // 이미지 분류 함수
+      const classifyImage = async (img) => {
+        try {
+          if (!model) {
+            console.error('Model not loaded yet.');
+            return null;
+          }
+    
+          const imageData = await getImageData(img);
+          const tensorImg = tf.browser.fromPixels(imageData).toFloat();
+          const resizedImg = tf.image.resizeBilinear(tensorImg, [500, 400]); 
+          const expandedImg = resizedImg.expandDims();
+          const normalizedImg = expandedImg.div(255.0);
+          const prediction = await model.predict(normalizedImg).array();
+          const classIndex = prediction[0].indexOf(Math.max(...prediction[0]));
+          return classIndex;
+        } catch (error) {
+          console.error('Error classifying the image:', error);
+          return null;
+        }
+      };
+    
+      // 이미지 파일을 ImageData로 변환
+      //TensorFlow.js 모델에 이미지를 입력으로 제공하기 위해서 이미지 파일을 ImageData로 변환하여 모델에 전달
+      //TensorFlow.js 모델은 숫자 행렬 형태인 ImageData를 입력으로 받아들이기 때문임 
+      const getImageData = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              const imageData = ctx.getImageData(0, 0, img.width, img.height);
+              resolve(imageData);
+            };
+            img.src = event.target.result;
+          };
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+      };
 
-// 이미지를 Tensor로 변환하고 분류하는 함수
-const classifyImage = async (img) => {
-  try {
-    if (!model) {
-      console.error('Model is not loaded.');
-      return;
-    }
+    const handleSubmit = () => {
+        //window.location.href = '/home';
+        // 사용자가 게시글을 업로드한 시점의 시간
+        //const currentTime = new Date().toISOString();
+        // 서버로 보낼 데이터 객체를 생성
+        const data = {
+        title,
+        description,
+        //image_url: previewImage, //미리보기 이미지를 전송
+        category,
+        name,
+        profile,
+        //created_at : getCurrentTime(),
+        };
+        console.log(data.title);
+    // 이미지 파일을 FormData로 감싸서 서버로 전송
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(data));
+        formData.append('image', imageFile);
+        
+    // fetch()를 이용하여 서버로 데이터를 전송
+        fetch(SERVER_URL, {
+        method: 'POST',
+        body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('서버 응답:', data);
+            handleGohomeClick();
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    };
 
-    const imgTensor = tf.browser.fromPixels(img);
-    const imgTensorExpanded = imgTensor.expandDims();
-    const predictions = model.predict(imgTensorExpanded);
-    const categoryIndex = getPredictedCategory(predictions);
-    setPredictedCategory(categoryIndex);
-    imgTensor.dispose();
-    imgTensorExpanded.dispose();
-    tf.dispose(predictions);
-  } catch (error) {
-    console.error('Error while classifying image:', error);
-  }
-};
-
-// 이미지 로드 완료 후 이미지 분류 실행
-const handleImageLoad = (e) => {
-  const img = e.target;
-  classifyImage(img);
-};
+    const handleMenuToggle = () => { //메뉴열기/닫기
+        setIsMenuOpen(!isMenuOpen);
+    };
 
 
-  const handleMenuToggle = () => { //메뉴열기/닫기
-    setIsMenuOpen(!isMenuOpen);
-  };
+    /*카테고리*/
+    const handleCategorySelect = (selectedCategory) => {
+        setCategory(selectedCategory);
+    };
 
+    
 
-  /*카테고리*/
-  const handleCategorySelect = (selectedCategory) => {
-    setCategory(selectedCategory);
-  };
-
-  /*로고클릭->홈페이지*/
-  const handleLogoClick = () => {
-    window.location.href = '/home';
-  };
-
-  /*파일업로드*/
-  const handleImageFileChange = (e) => {
-    const imageFile = e.target.files[0];
+   /*파일업로드*/
+   const handleImageFileChange = async (event) => {
+    const imageFile = event.target.files[0];
     if (
       imageFile &&
       (imageFile.type === 'image/jpeg' ||
@@ -133,195 +160,472 @@ const handleImageLoad = (e) => {
     ) {
       setImageFile(imageFile);
       setPreviewImage(URL.createObjectURL(imageFile));
+      // 이미지 파일이 업로드되면 예측 수행
+      const classIndex = await classifyImage(imageFile);
+      setSelectedClass(classIndex);
+      const predictedLabel = classLabels[classIndex];
+      setPrediction(predictedLabel);
+      setCategory(classLabels[classIndex]); // 카테고리를 예측된 클래스로 설정
     } else {
       setImageFile(null);
       setPreviewImage(null);
     }
   };
 
-/*
-// TensorFlow.js 모델 로드 및 분류 함수 정의
-const classifyImage = async (imageFile) => {
-  try {
-    // 모델 파일을 로드하기 위해 fetch 함수를 사용하여 ArrayBuffer로 변환
-    const modelFileResponse = await fetch('../model/model--0005-0.3897.hdf5');
-    const modelFileBuffer = await modelFileResponse.arrayBuffer();
-    const model = await tf.loadLayersModel(tf.io.browserFiles([modelFileBuffer])); // 파일을 배열로 감싸서 전달
-
-    // 이미지를 Tensor로 변환
-    const img = await tf.browser.fromPixels(imageFile);
-    const imgTensor = img.expandDims();
-
-    // 이미지 분류
-    const predictions = model.predict(imgTensor);
-
-    // 분류 결과를 처리
-    const categoryIndex = getPredictedCategory(predictions);
-    setCategory(categoryIndex);
-
-    // 메모리 해제
-    img.dispose();
-    imgTensor.dispose();
-    tf.dispose(predictions);
-
-  } catch (error) {
-    console.error('Error while classifying image:', error);
-  }
-};
-*/
-
-// 분류 결과를 처리하는 함수 (예시로 가장 확률이 높은 클래스의 인덱스 반환)
-const getPredictedCategory = (predictions) => {
-  // 분류 결과에서 가장 높은 확률을 가진 클래스의 인덱스를 반환하는 작업을 수행합니다.
-  // 예시: argMax를 사용하여 가장 높은 확률의 클래스 인덱스를 반환합니다.
-  const categoryIndex = predictions.argMax().dataSync()[0];
-  return categoryIndex;
-};
-
-
-
-  const textRef = useRef();
-
-  const handleResizeHeight = useCallback(() => {
-    const maxHeight = 650;
-    const calculatedHeight = textRef.current.scrollHeight;
-    const newHeight = calculatedHeight <= maxHeight ? calculatedHeight : maxHeight;
-    textRef.current.style.height = newHeight + 'px';
-  }, []);
-
-
-  return (
-
-    <div style={{width: '100%', height: '100%', position: 'relative', background: 'white',boxSizing: 'border-box' }}>
+    return (
         
-      <div style={{ width: 496, height: 239,textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <img style={{width: 354, height: 239, left: 0, top: 0, position: 'absolute'}} src={logo} alt=''  onClick={handleLogoClick}/>
-      </div>
+        <OutWrap>
+            <InOutWrap>            
+                {/* 홈페이지 로고 같*/}        
+                <LogoWrap>
+                    <Logo src={logo} alt='' onClick={handleGohomeClick}/>
+                </LogoWrap>
+                {/* 로고 아래 */} 
 
+                <Center>                   
+                    <InLayoutOne>  
+                        <Content>
 
-      <div style={{ display: 'flex',marginLeft:20,marginRight:20,flexWrap: 'wrap',height:500}}>
-          <div style={{ width:1272 }}>
+                            <One> {/*제목*/}
+                                <SmallWrap>
+                                    <InputSmall
+                                        type="text"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        placeholder="제목"
+                                    />
+                                </SmallWrap>
+                            </One>
 
-              <div style={{ height: 'auto', opacity: 0.90, background: 'white', borderRadius: 31, border: '3px #3A76EF solid', padding: '20px', wordWrap: 'break-word'}}> 
-              {/*input 박스 수정해야함 */}
-                  <div style={{  borderRadius: 31,paddingLeft: '20px', paddingRight: '20px' }}>
-                    <input style={{ color: 'black', fontSize: 40, fontFamily: 'Inter', fontWeight: '400',border: 'none',outline:'none',width:'100%' }}
-                        type="text"
-                        className="title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="제목"
-                      />
-                  </div>
-              </div>
+                            <Two>{/*이름 */}
+                                <SmallWrap>
+                                    <InputSmall 
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="이름"
+                                    />
+                                </SmallWrap>
+                            </Two>
 
-              <div style={{ height: 'auto', opacity: 0.90, background: 'white', borderRadius: 31, border: '3px #3A76EF solid', marginTop: 20, marginBottom: 20, padding: '20px', wordWrap: 'break-word' }}>
-                  {/* 추가된 부분 시작 */}
-                  <div style={{  borderRadius: 31 , paddingLeft: '20px', paddingRight: '20px'}}>
-                      <textarea style={{ color: 'black',width:'100%', fontSize: 40, fontFamily: 'Inter', fontWeight: '400',border: 'none',outline:'none'  }}
-                          value={description}
-                          className="description"
-                          onChange={(e) => setDescription(e.target.value)}
-                          placeholder="설명"
-                      />
-                  </div>
-                  {/* 추가된 부분 끝 */}
-              </div>
+                            <Three> {/*소개 */}
+                                <ProfileWrap>
+                                    <ProfileArea 
+                                    //ref={textRef} 길이 조절 수정해야함 
+                                    //onInput={handleResizeHeight}
+                                    value={profile}
+                                    onChange={(e) => setProfile(e.target.value)}
+                                    placeholder="소개 및 커리어"
+                                    />
+                                </ProfileWrap>
+                            </Three>
 
-{/* 
-              <div style={{ position:'relative', height:500 , opacity: 0.90, background: 'white', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', borderRadius: 31, border: '3px #3A76EF solid',padding: '20px' }}> */}
-              <div style={{ position: 'relative', opacity: 0.90, background: 'white', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', borderRadius: 31, border: '3px #3A76EF solid', padding: '20px', height: previewImage ? 'auto' : 500 }}>
-                {!previewImage && (
-                  <img className="upload-img" style={{ width: 100, height: 100, objectFit: 'cover',position:'absolute',top:'50%',left:'50%',transform: 'translate(-50%,-50%)'}} src={upload} alt="upload" />
-                )}
+                            <Four>{/* 설명 */}
+                                {/* 드래그 방지 추가하기 */}
+                                <DescriptionWrap>
+                                    <DescriptArea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder="설명" 
+                                    />
+                                </DescriptionWrap>
+                                
+                            </Four>                                        
+                            
+                            <Five>{/* 이미지 */}
+                                {!previewImage && (
+                                    <EmptyImg src={upload} alt="upload" />
+                                )} {/*빈 이미지로 사진 올리면 없어짐 */}
 
-                <img style={{ position: 'absolute', bottom: '10px', right: '10px',}}className="f-file" src={f_file} alt="f_file" onClick={() => document.getElementById('fileInput').click()}/>
-                <input //이미지를 사용자로부터 받아온다 
-                  id="fileInput"
-                  type="file"
-                  style={{ display: 'none' }}
-                  accept="image/jpg, image/png ,image/jpeg"
-                  onChange={handleImageFileChange}
-                />
-                {previewImage && <img style={{width:'100%',height:'100%',objectFit: 'cover'}} className="selected-image" src={previewImage} alt="Preview" />}
+                                <FindImg  src={f_file} alt="f_file" onClick={() => document.getElementById('fileInput').click()}/>
+                                <FileBox 
+                                    id="fileInput"
+                                    type="file"
+                                    accept="image/jpg, image/png ,image/jpeg"
+                                    onChange={handleImageFileChange} 
+                                />
 
-                  
-                  
-              </div>
+                                {previewImage && 
+                                <SelectImg src={previewImage} alt="Preview" />} 
+                                
+                            </Five>
 
-              <div style={{ width:700,height: 50, opacity: 0.90, background: '#798BE6', borderRadius: 31,marginTop:20, padding: '20px', wordWrap: 'break-word', cursor: 'pointer', display: 'flex',
-                    alignItems: 'center', position: 'relative',justifyContent: 'center',left:'50%',transform: 'translate(-50%)' }} onClick={handleMenuToggle}>
+                        </Content>  
+                    </InLayoutOne>  
+
+                    <InLayoutTwo>
+                    
+                        <Buttons>
+                            <Left>
+                                <ButtonOne onClick={handleMenuToggle}> {/*카테고리 */}
+                                
+                                {category ? (
+                                    <Menu>{category}</Menu>
+                                ) : (
+                                    <Menu>카테고리 선택</Menu>
+                                )}
+
+                                <DropContainer>
+                                
+                                    {isMenuOpen && (
+                                    <DropMenu > {/* 스타일 수정 */}
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[0])}>{classLabels[0]}</CateMenu>
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[1])}>{classLabels[1]}</CateMenu>
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[2])}>{classLabels[2]}</CateMenu>
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[3])}>{classLabels[3]}</CateMenu>
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[4])}>{classLabels[4]}</CateMenu>   
+                                    </DropMenu>
+                                    )}
+
+                                </DropContainer>
+
+                                </ButtonOne>
+                            </Left>
+
+                            <Right> 
+                                <ButtonTwo>
+                                    <UploadFinally
+                                    className="c-upload"
+                                    src={c_upload}
+                                    alt=""
+                                    onClick={handleSubmit} 
+                                        />
+                                </ButtonTwo>
+                            </Right>
+                        </Buttons>
+                    </InLayoutTwo>               
+                </Center>
                 
-                {category ? (
-                  <span className="category-text" style={{ zIndex: 2, color: 'white', fontSize: '33px', position: 'absolute' }}>{category}</span>
-                ) : (
-                  <span className="category-text" style={{ zIndex: 2, color: 'white', fontSize: '33px', position: 'absolute' }}>카테고리 선택</span>
-                )}
-                <div style={{ zIndex: 2, color: 'white', fontSize: '23px',position: 'absolute', }} className="dropdown-menu-container">
-                
-                  {isMenuOpen && (
-                    <div style={{ zIndex: 2, color: 'black', fontSize: '23px' }} className="dropdown-menu">
-                      <div onClick={() => handleCategorySelect('가족사진')}>가족사진</div>
-                      <div onClick={() => handleCategorySelect('증명사진')}>증명사진</div>
-                      <div onClick={() => handleCategorySelect('반려동물')}>반려동물</div>
-                      <div onClick={() => handleCategorySelect('바디프로필')}>바디프로필</div>
-                      <div onClick={() => handleCategorySelect('웨딩사진')}>웨딩사진</div>   
-                    </div>
-
-                  )}
-                </div>
-              </div>
-
-   {predictedCategory !== '' && (
-        <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: 20 }}>
-          분류 결과: {predictedCategory}
-        </div>
-      )}
-              
-          </div> 
-
-          <div style={{ marginLeft: 20 }}>
-              <div style={{ width: 491, height: 'auto', opacity: 0.90, background: 'white', borderRadius: 31, border: '3px #3A76EF solid', padding: '20px', wordWrap: 'break-word' }}>
-                  <div style={{  borderRadius: 31 }}>
-                    <input style={{ color: 'black', fontSize: 40, fontFamily: 'Inter', fontWeight: '400', paddingLeft: '20px', paddingRight: '20px',border: 'none',outline:'none'  }}
-                          type="text"
-                          className="name"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="이름"
-                      />
-                  </div>
-              </div>
-
-              <div style={{ width: 491, height: 670, opacity: 0.90, background: 'white', padding: '20px', wordWrap: 'break-word', borderRadius: 31, border: '3px #3A76EF solid', marginTop: 20 }}>
-                  <div style={{  borderRadius: 31 , paddingLeft: '20px', paddingRight: '20px'}}>
-                    <textarea style={{ color: 'black', fontSize: 40, fontFamily: 'Inter', fontWeight: '400',border: 'none',outline:'none' ,height:'auto', }}
-                      className="profile"
-                      ref={textRef}
-                      onInput={handleResizeHeight}
-                      value={profile}
-                      onChange={(e) => setProfile(e.target.value)}
-                      placeholder="소개 및 커리어"
-                    />
-                  </div>
-              </div>
-
-              <div>
-                <img  style={{ marginTop: 20 ,float:'right' }}
-                className="c-upload"
-                src={c_upload}
-                alt=""
-                onClick={handleSubmit}
-                  />
-              </div>
-          </div>   
-      </div>
-
-      
-
-           
-    </div>
-  );
+            </InOutWrap>
+        </OutWrap>
+    );
 }
 
 export default Post;
+
+const OutWrap = styled.div`
+width: 100%;
+height: 97.6vh;
+
+position: relative;
+
+background: white;
+
+display: flex;
+flex-direction: column;
+// justify-content: center;
+align-items: center;
+
+//overflow: hidden;
+`;
+
+const InOutWrap = styled.div`
+text-align: center;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+`;
+
+const LogoWrap = styled.div`
+width: 30vw; 
+height: 26vh;
+  text-align: center;
+display: flex;
+flex-direction: column;
+align-items: center;
+
+@media screen and (min-height: 900px) {
+    width: 32vw; 
+    height: 29vh;
+};
+`;
+
+const Logo = styled.img`
+width: 29vw; 
+height: 25vh;
+
+@media screen and (min-height: 900px) {
+    width: 31vw; 
+    height: 28vh; 
+}`;
+
+const Center = styled.div`
+//width: 65vw;
+text-align: center;
+display: flex;
+flex-direction: column;
+align-items: center;
+`;
+
+const InLayoutOne = styled.div`
+text-align:center;
+width:65vw;
+
+@media screen and (min-width: 1700px) {
+    width: 75vw;
+};
+`;
+
+const InLayoutTwo = styled(InLayoutOne)`
+display: flex;
+width:65vw;
+height:15vh;
+
+@media screen and (min-width: 1700px) {
+    width: 75vw;
+};
+`;
+
+const Content = styled.div`
+//width:65vw;
+display: flex;
+flex-direction: column;
+`;
+
+const ContentRadius = styled.div`
+border: 3px #3A76EF solid;
+padding: 20px;
+word-wrap: break-word;
+opacity: 0.90;
+border-radius: 31px;
+box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+
+margin-top: 20px;
+
+@media screen and (min-height: 900px) {
+    margin-top: 30px;
+    border: 4px #3A76EF solid;
+};
+`;
+
+const Radius = styled.div`
+//border: 3px #3A76EF solid;
+padding: 20px;
+word-wrap: break-word;
+border-radius: 40px;
+box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+
+margin-top: 20px;
+
+`;
+// 색깔 탁하게 하는 주범 이 새기임 opacity: 0.90;
+const One = styled(ContentRadius)`
+display: flex;
+align-items: center;
+
+
+`;
+
+const Two = styled(One)`
+
+
+`;
+
+const Three = styled(ContentRadius)`
+height: auto;
+
+flex:1;
+`;
+
+const Four = styled(ContentRadius)`
+height: 25vh;
+
+`;
+
+
+const Five = styled(ContentRadius)`
+
+position: relative;
+
+overflow: hidden;
+text-align: center;
+height:75vh;
+`;
+
+
+const Left = styled.div`
+width: 65%;
+display: flex;
+justify-content: center;
+`;
+
+const Right = styled.div`
+display: flex;
+flex-direction: column;
+//margin-left: auto;
+flex:1
+`;
+
+const Buttons = styled.div`
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+`;
+
+const ButtonOne = styled(Radius)`
+background: #798BE6;
+margin-top: 20px;
+cursor: pointer;
+display: flex;
+align-items: center;
+position: relative;
+justify-content: center;
+
+width: 40vw;
+height: 3.3vh;
+
+@media screen and (min-width: 1700px) {
+    width: 50vw;
+};
+
+`;
+
+const Area = styled.div`
+display: flex;
+align-items: center;
+width: 100%;
+border-radius: 31px;
+overflow: hidden; 
+`;
+
+const SmallWrap = styled(Area)`
+height: auto;
+
+`;
+// overflow: hidden;  내용이 부모 요소를 넘어가지 않도록 함 
+
+const DescriptionWrap = styled(Area)`
+height: 100%;
+
+`;
+const inputStyle = {
+color: 'black',
+fontSize: 40,
+fontFamily: 'Inter',
+fontWeight: '400',
+border: 'none',
+outline: 'none',
+width: '100%',
+
+    '@media screen and (max-height: 864px)': {
+        fontSize: 35,
+    },
+};
+
+const InputSmall = styled.input`
+${inputStyle}
+height: 6vh;
+`;
+
+const DescriptArea = styled.textarea`
+${inputStyle}
+height: 100%;
+`;
+
+const ProfileArea = styled.textarea`
+${inputStyle}
+height: 100%;
+`;
+
+const EmptyImg = styled.img`
+width: 200px;
+height: 200px;
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+
+@media screen and (max-height: 865px) {
+width: 150px;
+height: 150px;
+
+};
+`;
+const FindImg = styled.img`
+position: absolute;
+bottom: 10px;
+right: 10px;
+
+width:17.5vw;
+height: 7.4vh; 
+
+
+@media screen and (max-height: 864px) {
+  width:16.5vw;
+  
+};
+`;
+
+
+const ButtonTwo = styled.div`
+`;
+const UploadFinally = styled.img`
+  margin-top: 20px;
+  float: right;
+  width: 18vw;
+  height: 7.7vh;
+
+  @media screen and (max-height: 864px) {
+    width: 17.5vw;
+    height: 9vh;
+  }
+`;
+
+const FileBox = styled.input`
+  display:none;
+`;
+
+const SelectImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  `;
+
+  const Menu = styled.span`
+  z-index: 2;
+  color: white;
+  font-size: 37px;
+  position: absolute;
+  font-weight: 500;
+
+  @media screen and (max-height: 865px) {
+    font-size: 33px;
+    
+    };
+`;
+
+const DropContainer = styled.div`
+  z-index: 2;
+  color: white;
+  font-size: 23px;
+  position: absolute;
+  align-items: center;
+`;
+
+//드롭메뉴바
+const DropMenu = styled.div` 
+  position: relative;
+  background-color: #798BE6;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 31px;
+  z-index: 2;
+  color: white;
+  text-align: center;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  top: -157px;
+
+
+`;
+
+const CateMenu = styled.div` 
+  font-size: 29px;
+  font-weight: 550;
+`;
+
+
+const ProfileWrap = styled(Area)`
+height:100%;
+`;
