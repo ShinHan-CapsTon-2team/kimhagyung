@@ -2,7 +2,7 @@ import { useLocation ,useNavigate} from 'react-router-dom';
 import{ React,useState, useEffect} from 'react';
 import styled from "styled-components";
 import Des from './Des'
-import ClipLoader from 'react-spinners/ClipLoader';
+import ClipLoader from 'react-spinners/ClipLoader'; //npm install --save react-spinners
 //import love from '../Images/love.jpg'
 
 const Quizresult  = () => {
