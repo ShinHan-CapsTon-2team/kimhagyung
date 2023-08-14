@@ -57,3 +57,9 @@ with open('../model/class_names.json', 'w') as f:
 
 tensorflowjs_converter --input_format=keras /path/to/model.hdf5 /path/to/tfjs_model
 
+
+
+
+학습할 때 오류 뜨면 
+set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
