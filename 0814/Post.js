@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useCallback,useEffect } from 'react';
 import * as tf from '@tensorflow/tfjs'; //npm i @tensorflow/tfjs
 import '@tensorflow/tfjs-backend-webgl'; //npm i @tensorflow/tfjs-backend-webgl
 
@@ -6,8 +7,6 @@ import { useNavigate } from 'react-router-dom';
 
 import upload from '../Images/upload.png';
 
-
-//import Inputtitle from './InTitle' 컴포넌트 
 import Loogo from '../Component/Header' 
 import styled from "styled-components";
 
@@ -15,18 +14,20 @@ const SERVER_URL= 'http://localhost:4000/api/post';
 
 function PostEx() {
     const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    //const [image_url, setImageUrl] = useState('');
-    const [password, setPassword] = useState('');
     const [category, setCategory] = useState('');
     const [name, setName] = useState('');
     const [profile, setProfile] = useState(''); 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(''); // 이거 뭐야 
     const [imageFile, setImageFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null); // 미리보기 이미지 URL 상태
     const [prediction, setPrediction] = useState(null);
     const [selectedClass, setSelectedClass] = useState(0); // 선택한 클래스의 인덱스
+    const [password, setPassword] = useState('');
+    const [passwordMessage, setPasswordMessage] = useState('');
+    const [isPassword, setIsPassword] = useState(false);
+    const [description, setDescription] = useState('');
+    const [hashtags, setHashtags] = useState([]);
+
     const classLabels = [
       '바디프로필',
       '반려동물',
@@ -35,15 +36,20 @@ function PostEx() {
       '웨딩사진',
       '해당없음'
     ];
-
     const navigate = useNavigate();
 
+    //해시태그 처리
+    const updateDescriptionWithHashtags = (newDescription) => {
+      setDescription(newDescription);
+      const extractedHashtags = newDescription.match(/#\w+/g) || [];
+      setHashtags(extractedHashtags);
+    };
+    
     //홈페이지
     const handleGohomeClick = () => {
         navigate('/home');
     };
     
-
     useEffect(() => {
         // 모델 로드
         const modelUrl = './model_tfjs/model.json';
@@ -56,51 +62,51 @@ function PostEx() {
     
       const [model, setModel] = useState(null);
     
-   // 이미지 분류 함수 (소프트맥스 함수 사용)
-const classifyImage  = async (img, threshold) => {
-  try {
-      if (!model) {
-          console.error('Model not loaded yet.');
-          return null;
-      }
-
-      const imageData = await getImageData(img);
-      const tensorImg = tf.browser.fromPixels(imageData).toFloat();
-      const resizedImg = tf.image.resizeBilinear(tensorImg, [500, 400]); 
-      const expandedImg = resizedImg.expandDims();
-      const normalizedImg = expandedImg.div(255.0);
-      const prediction = await model.predict(normalizedImg).array();
-
-      // 소프트맥스 함수 적용하여 확률로 변환
-      const softmaxPrediction = tf.softmax(tf.tensor(prediction)).arraySync()[0];
-
-      // 예측 확률 중 가장 높은 값과 해당 클래스 인덱스 가져오기
-      const maxProb = Math.max(...softmaxPrediction);
-      const classIndex = softmaxPrediction.indexOf(maxProb);
-
-      // 특정 임계값 이상인 경우 해당 클래스 레이블 반환, 그렇지 않으면 "해당없음"
-      if (maxProb >= threshold) {
-          // 각 클래스 레이블과 예측 확률을 함께 콘솔에 출력
-            console.log('Predictions with Softmax:');
-            softmaxPrediction.forEach((prob, classIndex) => {
-                console.log(`${classLabels[classIndex]}: ${prob * 100}%`);
-            });
-        return classIndex;
-    } else {
-        console.log('Predictions with Softmax:');
-        softmaxPrediction.forEach((prob, idx) => {
-            console.log(`${classLabels[idx]}: ${prob * 100}%`);
-        });
-        console.log(`Predicted as: 해당없음 (Threshold: ${threshold * 100}%)`);
-        return -1; // -1을 반환하여 "해당없음" 클래스를 나타냄
-    }
-  } catch (error) {
-      console.error('Error classifying the image:', error);
-      return null;
-  }
-};
-
     
+         // 이미지 분류 함수 (소프트맥스 함수 사용)
+      const classifyImage  = async (img, threshold) => {
+        try {
+            if (!model) {
+                console.error('Model not loaded yet.');
+                return null;
+            }
+
+            const imageData = await getImageData(img);
+            const tensorImg = tf.browser.fromPixels(imageData).toFloat();
+            const resizedImg = tf.image.resizeBilinear(tensorImg, [500, 400]); 
+            const expandedImg = resizedImg.expandDims();
+            const normalizedImg = expandedImg.div(255.0);
+            const prediction = await model.predict(normalizedImg).array();
+
+            // 소프트맥스 함수 적용하여 확률로 변환
+            const softmaxPrediction = tf.softmax(tf.tensor(prediction)).arraySync()[0];
+
+            // 예측 확률 중 가장 높은 값과 해당 클래스 인덱스 가져오기
+            const maxProb = Math.max(...softmaxPrediction);
+            const classIndex = softmaxPrediction.indexOf(maxProb);
+
+            // 특정 임계값 이상인 경우 해당 클래스 레이블 반환, 그렇지 않으면 "해당없음"
+            if (maxProb >= threshold) {
+                // 각 클래스 레이블과 예측 확률을 함께 콘솔에 출력
+                  console.log('Predictions with Softmax:');
+                  softmaxPrediction.forEach((prob, classIndex) => {
+                      console.log(`${classLabels[classIndex]}: ${prob * 100}%`);
+                  });
+              return classIndex;
+          } else {
+              console.log('Predictions with Softmax:');
+              softmaxPrediction.forEach((prob, idx) => {
+                  console.log(`${classLabels[idx]}: ${prob * 100}%`);
+              });
+              console.log(`Predicted as: 해당없음 (Threshold: ${threshold * 100}%)`);
+              return -1; // -1을 반환하여 "해당없음" 클래스를 나타냄
+          }
+        } catch (error) {
+            console.error('Error classifying the image:', error);
+            return null;
+        }
+      };
+
       // 이미지 파일을 ImageData로 변환
       //TensorFlow.js 모델에 이미지를 입력으로 제공하기 위해서 이미지 파일을 ImageData로 변환하여 모델에 전달
       //TensorFlow.js 모델은 숫자 행렬 형태인 ImageData를 입력으로 받아들이기 때문임 
@@ -125,38 +131,57 @@ const classifyImage  = async (img, threshold) => {
         });
       };
 
-    const handleSubmit = () => {
+      const handleSubmit = () => {
+        if (!password) {
+          alert('비밀번호를 입력해주세요.');
+          return;
+      }
+  
+          const data = {
+          title,
+          description,
+          hashtags, // 추출된 해시태그를 포함
+          category,
+          name,
+          profile,
+          password, // 비밀번호 추가 
+          };
+          console.log(data.title);
+      // 이미지 파일을 FormData로 감싸서 서버로 전송
+          const formData = new FormData();
+          formData.append('data', JSON.stringify(data));
+          formData.append('image', imageFile);
+          
+      // fetch()를 이용하여 서버로 데이터를 전송
+          fetch(SERVER_URL, {
+          method: 'POST',
+          body: formData,
+          })
+          .then((response) => response.json())
+          .then((data) => {
+              console.log('서버 응답:', data);
+              handleGohomeClick();
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });
+      };
 
-        const data = {
-        title,
-        description,
-        //image_url: previewImage, //미리보기 이미지를 전송
-        category,
-        name,
-        profile,
-        password, // 비밀번호 추가 
-        //created_at : getCurrentTime(),
-        };
-        console.log(data.title);
-    // 이미지 파일을 FormData로 감싸서 서버로 전송
-        const formData = new FormData();
-        formData.append('data', JSON.stringify(data));
-        formData.append('image', imageFile);
-        
-    // fetch()를 이용하여 서버로 데이터를 전송
-        fetch(SERVER_URL, {
-        method: 'POST',
-        body: formData,
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            console.log('서버 응답:', data);
-            handleGohomeClick();
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-    };
+      // 비밀번호 유효성
+    const onChangePassword = useCallback((e) => {
+      const passwordRegex = /^[a-zA-Z0-9]{6,12}$/;
+      ;
+      const passwordCurrent = e.target.value;
+      setPassword(passwordCurrent);
+    
+      if (!passwordRegex.test(passwordCurrent)) {
+        setPasswordMessage('숫자 또는 영문자 조합으로 6자리 이상');
+        setIsPassword(false);
+      } else {
+        setPasswordMessage('');
+        setIsPassword(true);
+      }
+    }, []);
 
     const handleMenuToggle = () => { //메뉴열기/닫기
         setIsMenuOpen(!isMenuOpen);
@@ -212,62 +237,69 @@ const classifyImage  = async (img, threshold) => {
                         <Content>
 
                             <One> {/*제목*/}
-                                <SmallWrap>
-                                    <InputSmall
+                                <WrapAuto>
+                                    <InputBasic
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="제목"
                                     />
-                                </SmallWrap>
+                                </WrapAuto>
                             </One>
                             
-                            <Em>{/*이름 , 비밀번호 */}
-                              <Two style={{marginRight:20 ,flex:1}}>{/*이름 */}
-                                  <TwoWrap>
-                                      <InputSmall 
+                            <Two>{/*이름 , 비밀번호 */}
+                              <NameWrap >{/*이름 */}
+                                  <WrapAuto>
+                                      <InputBasic 
                                           type="text"
                                           value={name}
                                           onChange={(e) => setName(e.target.value)}
                                           placeholder="이름"
                                       />
-                                  </TwoWrap>
-                              </Two>
+                                      
+                                  </WrapAuto>
+                              </NameWrap>
 
-                              <Two style={{flex:1}}>{/*비밀번호  */}
-                                <TwoWrap>
-                                    <InputSmall
+                              <PwdWrap>{/*비밀번호  */}
+                                <WrapAuto>
+                                    <InputBasic
                                         type="password"
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={(e) => {
+                                          onChangePassword(e); // 비밀번호 유효성 검사 실행
+                                          setPassword(e.target.value); // 입력된 비밀번호 업데이트
+                                        }}
                                         placeholder="비밀번호"
                                     />
-                                </TwoWrap>
-                              </Two>
-                            </Em>
+                                </WrapAuto>
+                                {password.length > 0 && (
+                                          <span className={`message ${isPassword ? 'success' : 'error'}`} style={{fontSize:33,color:'red'}}>{passwordMessage}</span>
+                                          )}
+                              </PwdWrap>
+                            </Two>
                             
 
                             <Three> {/*소개 */}
-                                <ProfileWrap>
-                                    <ProfileArea 
+                                <WrapPer>
+                                    <TextareaBasic 
                                     //ref={textRef} 길이 조절 수정해야함 
                                     //onInput={handleResizeHeight}
                                     value={profile}
                                     onChange={(e) => setProfile(e.target.value)}
                                     placeholder="소개 및 커리어"
                                     />
-                                </ProfileWrap>
+                                </WrapPer>
                             </Three>
 
                             <Four>{/* 설명 */}
                                 {/* 드래그 방지 추가하기 */}
-                                <DescriptionWrap>
-                                    <DescriptArea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="설명" 
-                                    />
-                                </DescriptionWrap>
+                                <WrapPer>
+                                  <TextareaBasic
+                                    value={description}
+                                    onChange={(e) => updateDescriptionWithHashtags(e.target.value)}
+                                    placeholder="설명"
+                                  />
+                                </WrapPer>
                                 
                             </Four>                                        
                             
@@ -315,8 +347,8 @@ const classifyImage  = async (img, threshold) => {
                                         <CateMenu onClick={() => handleCategorySelect(classLabels[1])}>{classLabels[1]}</CateMenu>
                                         <CateMenu onClick={() => handleCategorySelect(classLabels[2])}>{classLabels[2]}</CateMenu>
                                         <CateMenu onClick={() => handleCategorySelect(classLabels[3])}>{classLabels[3]}</CateMenu>
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[4])}>{classLabels[4]}</CateMenu>   
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[5])}>{classLabels[5]}</CateMenu> 
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[4])}>{classLabels[4]}</CateMenu>
+                                        <CateMenu onClick={() => handleCategorySelect(classLabels[5])}>{classLabels[5]}</CateMenu>    
                                     </DropMenu>
                                     )}
 
@@ -326,10 +358,8 @@ const classifyImage  = async (img, threshold) => {
                             </Left>
 
                             <Right> 
-                                <ButtonTwo>
-                                    
-                                    <Menu onClick={handleSubmit} >
-                                    업로드  </Menu>
+                                <ButtonTwo onClick={handleSubmit}>
+                                    업로드  
                                 </ButtonTwo>
                             </Right>
                         </Buttons>
@@ -356,34 +386,59 @@ flex-direction: column;
 // justify-content: center;
 align-items: center;
 
+* {
+  font-size: 33px;
+}
+/* mobile 규격 */
+@media screen and (max-width: 540px){
+  * {
+  font-size: 27px;
+}
+    
+}
+@media screen and (min-width: 1700px) {
+  * {
+    font-size: 45px;
+  }
 `;
 
 const InOutWrap = styled.div`
-text-align: center;
+//text-align: center;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
 `;
 
-
-
-
 const Center = styled.div`
 //width: 65vw;
-text-align: center;
+//text-align: center;
 display: flex;
 flex-direction: column;
 align-items: center;
 `;
 
 const InLayoutOne = styled.div`
-text-align:center;
 width:65vw;
 
-@media screen and (min-width: 1700px) {
-    width: 75vw;
-};
+/* tablet 규격 */
+        @media screen and (max-width: 1023px){
+            
+        }
+
+        /* mobile 규격 */
+        @media screen and (max-width: 540px){
+          width: 80vw;
+        }
+        /* s 데스크 */
+        @media screen and (min-width: 1024px){
+            
+        }
+        /* l 데스크 */
+        @media screen and (min-width: 1700px){
+          width: 75vw;
+        }
+
 `;
 
 const InLayoutTwo = styled(InLayoutOne)`
@@ -391,8 +446,12 @@ display: flex;
 width:65vw;
 height:12vh;
 align-items: center;
-//justify-content: center;
-
+margin-bottom:20px;
+/* mobile 규격 */
+  @media screen and (max-width: 540px){
+    width: 80vw;
+    height:19vh;
+  }
 @media screen and (min-width: 1700px) {
     width: 75vw;
     height:13vh;
@@ -400,7 +459,6 @@ align-items: center;
 `;
 
 const Content = styled.div`
-//width:65vw;
 display: flex;
 flex-direction: column;
 `;
@@ -419,26 +477,44 @@ margin-top: 20px;
 };
 `;
 
-
-// 색깔 탁하게 하는 주범 이 새기임 opacity: 0.90;
 const One = styled(ContentRadius)`
 display: flex;
 align-items: center;
+height:auto;
+
 `;
 
-const Two = styled(ContentRadius)`
+const Two = styled.div`
+  display: flex;
+  //flex-wrap: wrap; /* 줄바꿈을 허용하여 가로 공간에 맞게 정렬될 수 있도록 설정 */
+  align-items: center; /* 수직 가운데 정렬 (선택 사항) *
+  
+  /* tablet 규격 */
+  @media screen and (max-width: 1023px){
+        flex-direction: column;
+  }
+`;
+
+const Em = styled(ContentRadius)`
 display: flex;
 align-items: center;
 `;
-const Em = styled.div`
-display: flex;
-  //flex-wrap: wrap; /* 줄바꿈을 허용하여 가로 공간에 맞게 정렬될 수 있도록 설정 */
-  justify-content: space-between; /* 공간을 균등하게 분배하여 가로로 정렬 */
-  align-items: center; /* 수직 가운데 정렬 (선택 사항) *`
+
+const NameWrap = styled(Em)`
+
+flex:1;
+/* s 데스크 */
+        @media screen and (min-width: 1024px){
+          margin-right:20px;
+        }
+`;
+
+const PwdWrap = styled(Em)`
+flex:1;
+`;
 
 const Three = styled(ContentRadius)`
-height: auto;
-flex:1;
+height: 20vh;
 `;
 
 const Four = styled(ContentRadius)`
@@ -448,27 +524,28 @@ height: 25vh;
 const Five = styled(ContentRadius)`
 position: relative;
 overflow: hidden;
-text-align: center;
+//text-align: center;
 height:75vh;
 `;
 
 const Left = styled.div`
-width: 65%;
 display: flex;
 justify-content: center;
+margin-left:auto;
 `;
 
 const Right = styled.div`
 display: flex;
 flex-direction: column;
 margin-left: auto;
-margin-right:10px;
-//flex:1
+
+/* s 데스크 */
+@media screen and (min-width: 1024px){
+  margin-right:auto;
+}
 `;
 
 const Radius = styled.button`
-//border: 3px #3A76EF solid;
-
 padding: 20px;
 word-wrap: break-word;
 border-radius: 40px;
@@ -479,36 +556,19 @@ border:none;
 
 `;
 const Buttons = styled.div`
-  text-align: center;
+  //text-align: center;
   display: flex;
-  justify-items: space-between;
+  //justify-items: space-between;
   flex-direction: row;
   width: 100%;
+
+  /* tablet 규격 */
+  @media screen and (max-width: 1023px){
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 `;
-//파일 찾기 
-
-const FindImg = styled(Radius)` 
-  background: #798BE6;
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-
-  display: flex;
-  justify-content: center;
-  align-items:center;
-  
-  width:18.5vw;
-  height: 7.5vh;
-  // 여기 적응된다고 . . .왜 다른 곳은 안되는거고 여긴 
-  @media screen and (min-height: 950px) {
-    width:18vw;
-    height: 8vh; 
-    
-   // };
-  
-  
-`;
-
 
 const ButtonOne = styled(Radius)`
 background: #798BE6;
@@ -521,96 +581,96 @@ position: relative;
 width: 40vw;
 height: 7vh;
 
+/* mobile 규격 */
+@media screen and (max-width: 540px){
+  width:80vw;
+  height: 7vh; 
+}
 @media screen and (min-width: 1700px) {
     width: 50vw;
     height: 7.5vh;
 };
 
 `;
-
+// 버튼투
 const ButtonTwo = styled(Radius)`
-background: #798BE6;
-display: flex;
-align-items: center;
-justify-content: center;
+  background: #798BE6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-position: relative;
-cursor: pointer;
+  position: relative;
+  cursor: pointer;
+
   width:18vw;
   height: 7vh; 
-  font-size: 33px;
+  color: white;
 
+  /* mobile 규격 */
+  @media screen and (max-width: 540px){
+    width:41vw;
+    height: 7vh; 
+
+  }
+
+  /* s 데스크 */
+  @media screen and (min-width: 1024px){
+      
+  }
   @media screen and (min-width: 1700px) {
     width:18vw;
     height: 7.5vh; 
   };
  `;
+//파일 찾기 
 
+const FindImg = styled(ButtonTwo)` 
+  position: absolute;
+  bottom: 30px;
+  right: 10px;
+
+  /* tablet 규격 */
+  @media screen and (max-width: 1023px){
+    bottom: 20px;
+  }
+
+`;
  // span 
 const Menu = styled.span`
 z-index: 2;
 color: white;
-
 position: absolute;
-font-weight: 500;
-
-font-size: 33px;
-over-flow:hidden;
-
-@media screen and (min-height: 950px) {
-  
-  font-size: 45px;
-  
-  };
 `;
 
 const Area = styled.div`
 display: flex;
 align-items: center;
 width: 100%;
-border-radius: 31px;
 overflow: hidden; 
 `;
 
-const SmallWrap = styled(Area)`
+const WrapAuto = styled(Area)`
 height: auto;
 
 `;
-const TwoWrap = styled(Area)`
-height: auto;
-
-`;
-
-const DescriptionWrap = styled(Area)`
+const WrapPer = styled(Area)`
 height: 100%;
-
 `;
+
 const inputStyle = {
 color: 'black',
-fontSize: 35,
 fontFamily: 'Inter',
-fontWeight: '400',
 border: 'none',
 outline: 'none',
-width: '100%',
-
-    '@media screen and (min-height: 950px)': {
-        fontSize: 40,
-    },
+width: '100%'
 };
 
-const InputSmall = styled.input`
+const InputBasic = styled.input`
 ${inputStyle}
 height: 6vh;
 `;
 
-
-const DescriptArea = styled.textarea`
-${inputStyle}
-height: 100%;
-`;
-
-const ProfileArea = styled.textarea`
+const TextareaBasic = styled.textarea`
 ${inputStyle}
 height: 100%;
 `;
@@ -618,17 +678,29 @@ height: 100%;
 const EmptyImg = styled.img`
 width: 200px;
 height: 200px;
-width: 150px;
-height: 150px;
 position: absolute;
 top: 50%;
 left: 50%;
 transform: translate(-50%, -50%);
+/* tablet 규격 */
+  @media screen and (max-width: 1023px){
+      
+  }
 
-@media screen and  (min-height: 950px){
-    width: 200px;
-    height: 200px;
-};
+  /* mobile 규격 */
+  @media screen and (max-width: 540px){
+    width: 120px;
+    height: 120px;
+  }
+  /* s 데스크 */
+  @media screen and (min-width: 1024px){
+    
+  }
+  /* l 데스크 */
+  @media screen and (min-width: 1700px){
+      
+  }
+
 `;
 
 const FileBox = styled.input`
@@ -644,7 +716,7 @@ const SelectImg = styled.img`
 const DropContainer = styled.div`
   z-index: 2;
   color: white;
-  font-size: 23px;
+  //font-size: 33px;
   position: absolute;
   align-items: center;
 `;
@@ -653,38 +725,57 @@ const DropContainer = styled.div`
 const DropMenu = styled.div` 
   position: relative;
   background-color: #798BE6;
-  border: 1px solid #ccc;
+  //border: 1px solid #ccc;
   padding: 10px;
   border-radius: 31px;
   z-index: 2;
 
-  text-align: center;
+  //text-align: center;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  top: -157px;
+  top: -137px;
 
-  
 
-  @media screen and (min-height: 950px){
-    top: -167px;
-    };
+  /* tablet 규격 */
+        @media screen and (max-width: 1023px){
+            
+        }
 
-    
-  @media screen and (max-width: 1950px) {
-    width:40vw;
-  };
-  @media screen and (max-width: 1600px) {
-    width:25vw;
-  };
-  
+        /* mobile 규격 */
+        @media screen and (max-width: 540px){
+          width:45vw;
+          top: -147px;
+        }
+        /* s 데스크 */
+        @media screen and (min-width: 1024px){
+          width:25vw;
+        }
+        /* l 데스크 */
+        @media screen and (min-width: 1700px){
+          width:40vw;
+          top: -177px;
+        }
 `;
 
 const CateMenu = styled.div` 
-  font-size: 29px;
-  font-weight: 550;
+  font-size: 25px;
   margin-top:5px;
+
+  /* tablet 규격 */
+        @media screen and (max-width: 1023px){
+            
+        }
+
+        /* mobile 규격 */
+        @media screen and (max-width: 540px){
+            
+        }
+        /* s 데스크 */
+        @media screen and (min-width: 1024px){
+          
+        }
+        /* l 데스크 */
+        @media screen and (min-width: 1700px){
+          font-size: 30px;
+        }
 `;
 
-
-const ProfileWrap = styled(Area)`
-height:100%;
-`;
