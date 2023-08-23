@@ -1,0 +1,43 @@
+-- USERS 테이블
+CREATE TABLE `users` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(100) NULL,
+  `nickname` VARCHAR(50) NULL,
+  PRIMARY KEY (`id`),
+  INDEX `idx2_email` (`email` ASC)
+);
+
+
+ALTER TABLE users
+  MODIFY nickname VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY email VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- TOKENS 테이블
+CREATE TABLE `tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `access_token` VARCHAR(255) NOT NULL,
+  `token_type` VARCHAR(50) NOT NULL,
+  `expires_in` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `idx_user_id` (`user_id` ASC),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+);
+
+
+-- USER_LOG 테이블
+CREATE TABLE `USER_LOG` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL, 				//외래키로 연결할 사용자 ID
+  `login_data` DATETIME NULL,
+  `login_status` VARCHAR(45) NULL,
+  `login_type` VARCHAR(45) NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `USERS` (`id`)		//USERS 테이블의 id와 연결
+);
+
+
+
+
+
+
