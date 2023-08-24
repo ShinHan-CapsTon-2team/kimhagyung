@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json()); // JSON 요청 바디를 파싱하기 위해 추가
 
 const CLIENT_ID = '';
-const CLIENT_SECRET = 'gIDzpOJtNv'; // 네이버 개발자 센터에서 발급받은 클라이언트 시크릿
+const CLIENT_SECRET = ''; // 네이버 개발자 센터에서 발급받은 클라이언트 시크릿
 const REDIRECT_URI = 'http://localhost:3000/home'; // 또는 클라이언트의 리다이렉트 URL
 const REDIRECT_URI_ENCODED = encodeURIComponent(REDIRECT_URI);
 
