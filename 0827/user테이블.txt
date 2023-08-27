@@ -1,0 +1,30 @@
+-- users 테이블 
+CREATE TABLE users (
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(100) UNIQUE,
+  nickname VARCHAR(30)
+);
+
+-- your_post 테이블
+CREATE TABLE your_post (
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  description TEXT,
+  category VARCHAR(6),
+  image_url VARCHAR(255),
+  email VARCHAR(100),
+  FOREIGN KEY (email) REFERENCES users(email)
+);
+
+
+ALTER TABLE users
+  MODIFY nickname VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY email VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+- users테이블 비우기 또는 데이터 삭제 
+1. ALTER TABLE your_post DROP FOREIGN KEY your_post_ibfk_1;
+2. TRUNCATE TABLE users;
+3. ALTER TABLE your_post ADD CONSTRAINT your_post_ibfk_1 FOREIGN KEY (email) REFERENCES users(email);
+
+
