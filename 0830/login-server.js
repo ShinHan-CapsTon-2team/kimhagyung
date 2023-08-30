@@ -21,7 +21,7 @@ app.post('/api/naver-login', (req, res) => {
   res.json({ naverLoginUrl: naverAuthUrl });
 });
 
-app.post('/api/email', async (req, res) => {
+app.post('/api/user', async (req, res) => {
   const { accessToken } = req.body;
 
   // 네이버 API를 통해 사용자 이메일 정보 가져오기
@@ -37,7 +37,8 @@ app.post('/api/email', async (req, res) => {
 
   if (naverData.resultcode === "00") {
     const userEmail = naverData.response.email;
-    res.json({ email: userEmail });
+    const userNickname = naverData.response.nickname; 
+    res.json({ email: userEmail, nickname: userNickname });
   } else {
     res.status(500).json({ error: "Failed to fetch user email" });
   }
@@ -88,17 +89,6 @@ app.post('/api/example', async (req, res) => {
     if (!userInfoResponse.ok) {
       throw new Error('Failed to fetch user info');
     }
-
-    // 리프레시 토큰을  HTTP-Only 쿠키에 저장합니다.
-    // const refreshTokenCookie = cookie.serialize('refresh_token', tokenData.refresh_token, {
-    //   httpOnly: true,
-    //   secure: true, // HTTPS 연결에서만 쿠키 사용 (배포 시에는 필수)
-    //   maxAge: 30 * 24 * 60 * 60, // 리프레시 토큰의 유효기간 설정 (예: 30일)
-    //   sameSite: 'strict', // 보안 상 쿠키의 전송을 제한
-    //   path: '/', // 쿠키가 적용될 경로
-    // });
-    // 쿠키를 클라이언트에게 전달합니다.
-    //res.setHeader('Set-Cookie', refreshTokenCookie);
 
     const userInfoData = await userInfoResponse.json(); //사용자 정보 클라이언트로 보냄
     console.log('server_User info:', userInfoData.response); 
