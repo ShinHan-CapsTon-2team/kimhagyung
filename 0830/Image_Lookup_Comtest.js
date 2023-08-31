@@ -30,7 +30,7 @@ function Images_Lookup_Comtest() {
   
       // 서버로 액세스 토큰을 보내서 사용자 이메일 정보를 요청
       if (accessToken) {
-        fetch('http://localhost:4001/api/email', {
+        fetch('http://localhost:4001/api/user', {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
