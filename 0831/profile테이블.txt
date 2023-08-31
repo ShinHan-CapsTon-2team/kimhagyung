@@ -1,0 +1,59 @@
+
+CREATE TABLE profiles (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  introduction TEXT,
+  career TEXT,
+  PRIMARY KEY (id),
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+ALTER TABLE profiles
+  MODIFY introduction TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  MODIFY career TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+
+// 프로필 수정 라우트
+app.post('/api/profileEdit', (req, res) => {
+  // 요청 데이터 가져오기
+  const introduction = req.body.introduction;
+  const career = req.body.career;
+  const email = req.body.email;
+
+  // 사용자 ID 찾기
+  connection.query(
+    `SELECT id FROM users WHERE email = ?`,
+    [email],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+      }
+
+      if (rows.length === 0) {
+        res.status(400).send('Invalid email');
+      }
+
+      // 프로필 생성
+      connection.query(
+        `INSERT INTO profiles (user_id, introduction, career) VALUES (?, ?, ?)`,
+        [rows[0].id, introduction, career],
+        (err, rows) => {
+          if (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
+          }
+   // 프로필 정보 응답
+          res.status(201).send({
+            message: 'Profile created successfully',
+            profile: {
+              introduction,
+              career,
+            },
+          });
+        },
+      );
+    },
+  );
+});
