@@ -16,8 +16,6 @@ import { Link } from 'react-router-dom';
 import styled from "styled-components";
 
 function CosineEx({ subfolder }) {
-    const [category, setCategory] = useState('');
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [imageFile, setImageFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null); // 미리보기 이미지 URL 상태
     const [prediction, setPrediction] = useState(null);
@@ -241,35 +239,6 @@ const getImageDataFromPath = async (imagePath) => {
   });
 };
 
-  
-    const handleMenuToggle = () => { //메뉴열기/닫기
-        setIsMenuOpen(!isMenuOpen);
-    };
-
-
-// 카테고리 버튼을 클릭했을 때 실행되는 함수
-const handleCategorySelect = (selectedCategory) => {
-  const selectedClassIndex = classLabels.indexOf(selectedCategory);
-
-  if (selectedClassIndex !== -1) {
-    setCategory(selectedCategory);
-
-    const selectedClassLabel = classLabels[selectedClassIndex];
-
-    fetch(`http://localhost:4004/api/${selectedClassLabel}`)
-      .then(response => response.json())
-      .then(data => {
-        setImagePaths(data.map(imagePath => `http://localhost:4004${imagePath}`));
-        console.log('Received image paths:', data);
-      }) 
-      .catch(error => {
-        console.error('Error fetching image paths:', error);
-        setError(error);
-      });
-  } else {
-    console.error(`Selected category '${selectedCategory}' does not have a matching class label.`);
-  }
-};
 
 
     const handleImageFileChange = async (event) => {
@@ -300,10 +269,9 @@ const handleCategorySelect = (selectedCategory) => {
             const predictedLabel = classLabels[classIndex];
             if (classIndex === -1) {
               setPrediction(classLabels[5]);
-              setCategory(classLabels[5]);
+               
             } else {
-              setPrediction(predictedLabel);
-              setCategory(predictedLabel); // 카테고리를 예측된 클래스로 설정
+              setPrediction(predictedLabel); 
             }
 
             // 이미지 경로를 서버에서 가져옴
@@ -365,31 +333,7 @@ const handleCategorySelect = (selectedCategory) => {
                     <InLayoutTwo>
                     
                         <Buttons>
-                            <Left>
-                                <ButtonOne onClick={handleMenuToggle}> {/*카테고리 */}
-                                
-                                {category ? (
-                                    <Menu>{category}</Menu>
-                                ) : (
-                                    <Menu>카테고리 선택</Menu>
-                                )}
-
-                                <DropContainer>                               
-                                    {isMenuOpen && (
-                                    <DropMenu > {/* 스타일 수정 */}
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[0])}>{classLabels[0]}</CateMenu>
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[1])}>{classLabels[1]}</CateMenu>
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[2])}>{classLabels[2]}</CateMenu>
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[3])}>{classLabels[3]}</CateMenu>
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[4])}>{classLabels[4]}</CateMenu> 
-                                        <CateMenu onClick={() => handleCategorySelect(classLabels[5])}>{classLabels[5]}</CateMenu>   
-                                    </DropMenu>
-                                    )}
-
-                                </DropContainer>
-
-                                </ButtonOne>
-                            </Left>
+                          
 
                             <Right> 
                             <ButtonTwo>
@@ -506,23 +450,8 @@ margin-top: 20px;
 };
 `;
 
-const Radius = styled.div`
-//border: 3px #3A76EF solid;
-padding: 20px;
-word-wrap: break-word;
-border-radius: 40px;
-box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-
-margin-top: 20px;
-
-`;
-// 색깔 탁하게 하는 주범 이 새기임 opacity: 0.90;
-const One = styled(ContentRadius)`
-display: flex;
-align-items: center;
 
 
-`;
 const Five = styled(ContentRadius)`
 
 position: relative;
@@ -533,11 +462,7 @@ height:75vh;
 `;
 
 
-const Left = styled.div`
-width: 65%;
-display: flex;
-justify-content: center;
-`;
+
 
 const Right = styled.div`
 display: flex;
@@ -553,60 +478,6 @@ const Buttons = styled.div`
   width: 100%;
 `;
 
-const ButtonOne = styled(Radius)`
-background: #798BE6;
-margin-top: 20px;
-cursor: pointer;
-display: flex;
-align-items: center;
-position: relative;
-justify-content: center;
-
-width: 40vw;
-height: 3.3vh;
-
-@media screen and (min-width: 1700px) {
-    width: 50vw;
-};
-
-`;
-
-const Area = styled.div`
-display: flex;
-align-items: center;
-width: 100%;
-border-radius: 31px;
-overflow: hidden; 
-`;
-
-const SmallWrap = styled(Area)`
-height: auto;
-
-`;
-// overflow: hidden;  내용이 부모 요소를 넘어가지 않도록 함 
-
-const DescriptionWrap = styled(Area)`
-height: 100%;
-
-`;
-const inputStyle = {
-color: 'black',
-fontSize: 40,
-fontFamily: 'Inter',
-fontWeight: '400',
-border: 'none',
-outline: 'none',
-width: '100%',
-
-    '@media screen and (max-height: 864px)': {
-        fontSize: 35,
-    },
-};
-
-const InputSmall = styled.input`
-${inputStyle}
-height: 6vh;
-`;
 
 const EmptyImg = styled.img`
 width: 200px;
@@ -662,18 +533,6 @@ const SelectImg = styled.img`
   object-fit: contain;
   `;
 
-  const Menu = styled.span`
-  z-index: 2;
-  color: white;
-  font-size: 37px;
-  position: absolute;
-  font-weight: 500;
-
-  @media screen and (max-height: 865px) {
-    font-size: 33px;
-    
-    };
-`;
 
 const DropContainer = styled.div`
   z-index: 2;
@@ -683,23 +542,3 @@ const DropContainer = styled.div`
   align-items: center;
 `;
 
-//드롭메뉴바
-const DropMenu = styled.div` 
-  position: relative;
-  background-color: #798BE6;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 31px;
-  z-index: 2;
-  color: white;
-  text-align: center;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  top: -157px;
-
-
-`;
-
-const CateMenu = styled.div` 
-  font-size: 29px;
-  font-weight: 550;
-`;
