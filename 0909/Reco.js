@@ -35,13 +35,6 @@ function CosineExs({ subfolder }) {
  
     const navigate = useNavigate();
 
-    //홈페이지
-    const handleGohomeClick = () => {
-        navigate('/home');
-    };
-
-
-
     useEffect(() => {
         // 모델 로드
         const modelUrl = './model_tfjs/model.json';
@@ -194,8 +187,7 @@ const handleCosineCalculation = async () => {
 
       // 여기에서 유사한 이미지를 `/upload` 페이지로 전달하고 이동합니다.
       if (topSimilarImages) { // 유사한 이미지가 존재할 경우에만 전달 및 이동
-         // navigate('/quizresult', { state: { topSimilarImages } });
-         navigate('/quizexample', { state: { topSimilarImages } });
+         navigate('/recoresult', { state: { topSimilarImages } });
       }
 
   } catch (error) {
