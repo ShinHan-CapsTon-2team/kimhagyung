@@ -14,7 +14,7 @@ const RecoResult = () => {
     };
 
     const handleGoUploadClick = () => {
-        navigate('/recoex');
+        navigate('/reco');
     };
 
 
