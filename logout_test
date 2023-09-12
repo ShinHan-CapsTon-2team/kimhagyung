@@ -1,0 +1,34 @@
+const onNaverLogout = () => {
+  // 로그아웃 처리 코드
+  clearStorage(['access_token']); // access_token을 제외한 로컬 스토리지 데이터 삭제
+  setIsOpen(false); // 로그아웃 후 모달 닫음
+  console.log("로그아웃 되었습니다.");
+};
+
+function clearStorage(exceptions) {
+  var storage = localStorage;
+  var keys = [];
+  exceptions = [].concat(exceptions); // prevent undefined
+
+  // get storage keys
+  $.each(localStorage, function (key, val) {
+    keys.push(key);
+  });
+
+  // loop through keys
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var deleteItem = true;
+
+    // check if key excluded
+    for (var j = 0; j < exceptions.length; j++) {
+      var exception = exceptions[j];
+      if (key == exception) deleteItem = false;
+    }
+
+    // delete key
+    if (deleteItem) {
+      localStorage.removeItem(key);
+    }
+  }
+}
