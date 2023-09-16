@@ -12,18 +12,14 @@ import styled from 'styled-components';
 //수정된곳(0916)
 //모델파일 사용안함 
 //그냥 각도 기반 유사도임 (코사인유사도)
-//-1~1사이의 값이어야되는데 값이 너무 큼 
+//-1~1사이의 값이어야되는데 값이 너무 큼 (이건 걍 텐서플로우js문제같기도하고 내 이미지 문제 모르겠다)
 //이미지 크기 줄임(250,250)
 
 function CosineExs() {
   const [imageFile, setImageFile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [prediction, setPrediction] = useState(null);
   const [model, setModel] = useState(null);
   const [imagePaths, setImagePaths] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(0); // 선택한 클래스의 인덱스
-  const [error, setError] = useState(null);
-  const [inputImageTensor, setInputImageTensor] = useState(null);
   const classLabels = ['body', 'dog', 'family', 'profile', 'wedding', 'unknown'];
 
   const navigate = useNavigate();
@@ -250,16 +246,11 @@ function CosineExs() {
 
       setImageFile(imageFile);
       setPreviewImage(URL.createObjectURL(imageFile));   
-      setInputImageTensor(resizedImage);
+
 
       const classIndex = await classifyImageData(imageFile, 0.8); // 0.8 프로의 정확도가 임계값
-      setSelectedClass(classIndex);
       const predictedLabel = classLabels[classIndex];
-      if (classIndex === -1) {
-        setPrediction(classLabels[5]);
-      } else {
-        setPrediction(predictedLabel);
-      }
+     
 
       // 이미지 경로를 서버에서 가져옴
       fetch(`http://localhost:4004/api/${predictedLabel}`)
@@ -270,7 +261,6 @@ function CosineExs() {
         })
         .catch((error) => {
           console.error('Error fetching image paths:', error);
-          setError(error);
         });
     } else {
       setImageFile(null);
