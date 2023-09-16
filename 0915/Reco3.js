@@ -10,6 +10,7 @@ import styled from 'styled-components';
 //수정된곳(0916)
 //모델파일 사용안함 
 //거리 기반 유사도(유클리디안 유사도)
+//값은 0~무한대로 표현
 //이미지 크기(250,250)
 function CosineExs() {
   const [imageFile, setImageFile] = useState(null);
